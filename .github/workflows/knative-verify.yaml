@@ -48,22 +48,25 @@ jobs:
         curl -L https://github.com/google/ko/releases/download/v0.6.0/ko_0.6.0_Linux_x86_64.tar.gz | tar xzf - ko
         chmod +x ./ko
         sudo mv ko /usr/local/bin
+
         go get github.com/google/go-licenses
 
     - name: Check out code onto GOPATH
       uses: actions/checkout@v2
       with:
-        path: ./src/knative.dev/${{ github.event.repository.name }}
+        path: ./src/github.com/${{ github.repository }}
 
     - name: Update Codegen
       shell: bash
+      working-directory: ./src/github.com/${{ github.repository }}
       run: |
-        pushd ./src/knative.dev/${{ github.event.repository.name }}
         [[ ! -f hack/update-codegen.sh ]] || ./hack/update-codegen.sh
-        popd
+
+        git add .
 
     - name: Verify
       shell: bash
+      working-directory: ./src/github.com/${{ github.repository }}
       run: |
         # From: https://backreference.org/2009/12/23/how-to-match-newlines-in-sed/
         # This is to leverage this workaround:
@@ -72,7 +75,8 @@ jobs:
           sed ':begin;$!N;s/\n/%0A/;tbegin'
         }
 
-        pushd ./src/knative.dev/${{ github.event.repository.name }}
+        git status
+
         if [[ -z "$(git status --porcelain)" ]]; then
             echo "${{ github.repository }} up to date."
         else
@@ -85,4 +89,3 @@ jobs:
             echo "${{ github.repository }} is out of date. Please run hack/update-codegen.sh"
             exit 1
         fi
-        popd

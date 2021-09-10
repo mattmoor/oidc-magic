@@ -1,0 +1,13 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-token
+spec:
+  template:
+    spec:
+      # A service account with workload identity enabled.
+      serviceAccountName: example-identity
+      restartPolicy: Never
+      containers:
+      - name: test
+        image: ko://github.com/mattmoor/oidc-magic
